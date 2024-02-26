@@ -10,7 +10,7 @@ import {
   Settings,
   Trash,
 } from 'lucide-react'
-import { usePathname } from 'next/navigation'
+import { useParams, usePathname } from 'next/navigation'
 import { ElementRef, useEffect, useRef, useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { UserItem } from './user-item'
@@ -25,8 +25,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import TrashBox from './trashbox'
+import { useSearch } from '@/hooks/use-search'
+import { useSettings } from '@/hooks/use-settings'
+import { NavBar } from './navbar'
 
 export const Navigation = () => {
+  const search = useSearch()
+  const settings = useSettings()
+  const params = useParams()
   const pathname = usePathname()
   const isMobile = useMediaQuery('(max-width: 768px)')
   const create = useMutation(api.documents.create)
@@ -138,7 +144,7 @@ export const Navigation = () => {
           role="button"
           onClick={collapse}
           className={cn(
-            'absolute right-3 top-3 h-6 w-6 rounded-sm text-muted-foreground opacity-0 transition  hover:bg-neutral-300 group-hover/sidebar:opacity-100 dark:bg-neutral-600',
+            'absolute right-3 top-3 h-6 w-6 rounded-sm text-muted-foreground opacity-0 transition  hover:bg-neutral-300 group-hover/sidebar:opacity-100 dark:hover:bg-neutral-600',
             isMobile && 'opacity-100',
           )}
         >
@@ -147,8 +153,8 @@ export const Navigation = () => {
         <div>
           <UserItem />
 
-          <Item label="search" icon={Search} isSearch onClick={() => {}} />
-          <Item label="Settings" icon={Settings} onClick={() => {}} />
+          <Item label="search" icon={Search} isSearch onClick={search.onOpen} />
+          <Item label="Settings" icon={Settings} onClick={settings.onOpen} />
           <Item onClick={handleCreate} label="New Page" icon={PlusCircle} />
         </div>
         <div className="mt-4">
@@ -180,15 +186,19 @@ export const Navigation = () => {
           isMobile && 'left-0 w-full',
         )}
       >
-        <nav className="w-full bg-transparent px-3 py-2">
-          {isCollapsed && (
-            <MenuIcon
-              onClick={resetWidth}
-              role="button"
-              className="h-6 w-6 text-muted-foreground"
-            />
-          )}
-        </nav>
+        {params.documentId ? (
+          <NavBar isCollapsed={isCollapsed} onResetWidth={resetWidth} />
+        ) : (
+          <nav className="w-full bg-transparent px-3 py-2">
+            {isCollapsed && (
+              <MenuIcon
+                onClick={resetWidth}
+                role="button"
+                className="h-6 w-6 text-muted-foreground"
+              />
+            )}
+          </nav>
+        )}
       </div>
     </>
   )
