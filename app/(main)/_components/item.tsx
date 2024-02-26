@@ -1,11 +1,26 @@
 'use client'
 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/convex/_generated/api'
 import { Id } from '@/convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
+import { useUser } from '@clerk/clerk-react'
 import { useMutation } from 'convex/react'
-import { ChevronDown, ChevronRight, LucideIcon, Plus } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  LucideIcon,
+  MoreHorizontal,
+  Plus,
+  TrashIcon,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -36,8 +51,10 @@ const Item = ({
 }: ItemProps) => {
   // Level will control de padding in list of items
   // documentIcon is a string because it is a emoji, so i don't need to transform in an Icon
+  const { user } = useUser()
   const router = useRouter()
   const create = useMutation(api.documents.create)
+  const archive = useMutation(api.documents.archive)
   const ChevronIcon = expanded ? ChevronDown : ChevronRight
 
   const handleExpand = (
@@ -45,6 +62,18 @@ const Item = ({
   ) => {
     event.stopPropagation()
     onExpand?.()
+  }
+
+  const onArchive = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    event.stopPropagation()
+    if (!id) return
+    const promise = archive({ id })
+
+    toast.promise(promise, {
+      loading: 'Moving to trash...',
+      success: 'Document moved to trash!',
+      error: 'Failed to archive Document.',
+    })
   }
 
   const onCreate = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -100,6 +129,31 @@ const Item = ({
       )}
       {!!id && (
         <div className="ml-auto flex items-center gap-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} asChild>
+              <div
+                role="button"
+                className="ml-auto h-full rounded-sm opacity-0 hover:bg-neutral-300 group-hover:opacity-100 dark:hover:bg-neutral-600"
+              >
+                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-60"
+              align="start"
+              side="right"
+              forceMount
+            >
+              <DropdownMenuItem onClick={onArchive}>
+                <TrashIcon className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <div className="p-2 text-sm text-muted-foreground">
+                Last edited by: {user?.fullName}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="ml-auto h-full rounded-sm opacity-0 hover:bg-neutral-300 group-hover:opacity-100 dark:bg-neutral-600">
             <Plus
               role="button"
