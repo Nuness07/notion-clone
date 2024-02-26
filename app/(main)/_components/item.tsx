@@ -1,8 +1,13 @@
 'use client'
 
+import { Skeleton } from '@/components/ui/skeleton'
+import { api } from '@/convex/_generated/api'
 import { Id } from '@/convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
-import { ChevronDown, ChevronRight, LucideIcon } from 'lucide-react'
+import { useMutation } from 'convex/react'
+import { ChevronDown, ChevronRight, LucideIcon, Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface ItemProps {
   id?: Id<'documents'>
@@ -31,7 +36,34 @@ const Item = ({
 }: ItemProps) => {
   // Level will control de padding in list of items
   // documentIcon is a string because it is a emoji, so i don't need to transform in an Icon
+  const router = useRouter()
+  const create = useMutation(api.documents.create)
   const ChevronIcon = expanded ? ChevronDown : ChevronRight
+
+  const handleExpand = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    event.stopPropagation()
+    onExpand?.()
+  }
+
+  const onCreate = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    event.stopPropagation()
+    if (!id) return
+    const promise = create({ title: 'untitled', parentDocument: id }).then(
+      (documentId) => {
+        if (!expanded) {
+          onExpand?.()
+        }
+        // router.push(`/documents/${documentId}`)
+      },
+    )
+    toast.promise(promise, {
+      loading: 'Creating a new note...',
+      success: 'New note created!',
+      error: 'Failed to create a new note',
+    })
+  }
 
   return (
     <div
@@ -49,7 +81,7 @@ const Item = ({
         <div
           role="button"
           className="mr-1 h-full rounded-sm hover:bg-neutral-300 dark:bg-neutral-600"
-          onClick={() => {}}
+          onClick={handleExpand}
         >
           <ChevronIcon className="h-4 w-4 shrink-0 text-muted-foreground/50" />
         </div>
@@ -66,6 +98,29 @@ const Item = ({
           <span className="text-xs">Ctrl</span>+ K
         </kbd>
       )}
+      {!!id && (
+        <div className="ml-auto flex items-center gap-x-2">
+          <div className="ml-auto h-full rounded-sm opacity-0 hover:bg-neutral-300 group-hover:opacity-100 dark:bg-neutral-600">
+            <Plus
+              role="button"
+              onClick={onCreate}
+              className="h-4 w-4 text-muted-foreground"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+Item.Skeleton = function ItemSkeleton({ level }: { level?: number }) {
+  return (
+    <div
+      className="flex gap-x-2 py-[3px]"
+      style={{ paddingLeft: level ? `${level * 12 + 12}px` : '12px' }}
+    >
+      <Skeleton className="h-4 w-4" />
+      <Skeleton className="h-4 w-[30%]" />
     </div>
   )
 }
