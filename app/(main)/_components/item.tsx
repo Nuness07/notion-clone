@@ -33,7 +33,7 @@ interface ItemProps {
   level?: number
   onExpand?: () => void
   label: string
-  onClick: () => void
+  onClick?: () => void
   icon: LucideIcon
 }
 
@@ -76,10 +76,10 @@ const Item = ({
     })
   }
 
-  const onCreate = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const onCreate = (event: React.MouseEvent<HTMLOrSVGElement, MouseEvent>) => {
     event.stopPropagation()
     if (!id) return
-    const promise = create({ title: 'untitled', parentDocument: id }).then(
+    const promise = create({ title: 'Untitled', parentDocument: id }).then(
       (documentId) => {
         if (!expanded) {
           onExpand?.()
